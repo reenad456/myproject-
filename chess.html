@@ -5,10 +5,294 @@
     <meta charset="utf-8">
     <title> chess </title>
     <style media="screen">
+    :root {
+    	--purple: #a63bf3;
+    	--dark: #25075c;
+    	--teal: #24c4ee;
+    	--red: #f71584;
+    	--pink: #fd88fc;
+    	--blue: #45ccd8;
+    }
 
+    * {
+    	box-sizing: border-box;
+    }
+
+    body {
+    	margin: 0;
+    	font-size: 16px;
+    	font-family: "Orbitron", sans-serif;
+    }
+
+    .bot,
+    .top {
+    	display: grid;
+    	place-items: center;
+    	height: 100vh;
+    	width: 100%;
+    	position: absolute;
+    }
+
+    .bot {
+    	background-color: var(--pink);
+    	padding-left: 100px;
+    	--s: min(10vw, 10vh);
+
+    	.scale {
+    		position: relative;
+    		width: calc(7 * var(--s));
+    		height: calc(7 * var(--s));
+    		display: grid;
+    		place-items: center;
+    	}
+
+    	.board {
+    		position: relative;
+    		display: grid;
+    		place-items: center;
+    		width: calc(7 * var(--s));
+    		height: calc(7 * var(--s));
+    		perspective: 1200px;
+    		perspective-origin: center;
+    	}
+
+    	.cube {
+    		position: absolute;
+    		transform-style: preserve-3d;
+    		width: calc(100% - 10px);
+    		height: calc(100% - 10px);
+    		transform-origin: calc(var(--s) * 3.5) calc(var(--s) * 3.5)
+    			calc(var(--s) * -3.5);
+    	}
+
+    	.side {
+    		width: 100%;
+    		height: 100%;
+    		transform-style: preserve-3d;
+    		position: absolute;
+    		background-image: linear-gradient(var(--pink) 1px, transparent 1px),
+    			linear-gradient(to right, var(--pink) 1px, var(--dark) 1px);
+    		background-position: 0 0;
+    		background-size: calc(100% / 7) calc(100% / 7);
+    		display: grid;
+    		grid-template: repeat(7, 1fr) / repeat(7, 1fr);
+
+    		.chess-piece {
+    			position: relative;
+    			width: var(--s);
+    			height: var(--s);
+    			background-image: url("https://assets.codepen.io/539557/chess-neon.svg");
+    			background-size: calc(6 * var(--s)) var(--s);
+    		}
+
+    		&.pawn {
+    			// front
+    			transform: translatez(0);
+    			.chess-piece {
+    				background-position-x: calc(var(--s) * 0);
+    				grid-area: 2 / 2;
+    			}
+    			.target {
+    				grid-area: 2 / 2;
+    			}
+    		}
+    		&.knight {
+    			//top
+    			transform-origin: bottom center;
+    			transform: translate(0, -100%) rotatex(90deg);
+    			.chess-piece {
+    				background-position-x: calc(var(--s) * -2);
+    				grid-area: 4 / 4;
+    			}
+    			.target {
+    				grid-area: 4 / 4;
+    			}
+    		}
+    		&.rook {
+    			// right
+    			transform-origin: left center;
+    			transform: translate(100%, 0) rotatey(90deg);
+    			.chess-piece {
+    				background-position-x: calc(var(--s) * -1);
+    				grid-area: 4 / 4;
+    			}
+    			.target {
+    				grid-area: 4 / 4;
+    			}
+    		}
+    		&.bishop {
+    			// back
+    			transform: translatez(calc(-7 * var(--s) + 10px)) rotatey(-180deg);
+    			.chess-piece {
+    				background-position-x: calc(var(--s) * -3);
+    				grid-area: 4 / 4;
+    			}
+    			.target {
+    				grid-area: 4 / 4;
+    			}
+    		}
+    		&.queen {
+    			// left
+    			transform-origin: right center;
+    			transform: translate(-100%, 0) rotatey(-90deg);
+    			.chess-piece {
+    				background-position-x: calc(var(--s) * -4);
+    				grid-area: 4 / 4;
+    			}
+    			.target {
+    				grid-area: 4 / 4;
+    			}
+    		}
+    		&.king {
+    			// bottom
+    			transform-origin: top center;
+    			transform: translatey(100%) rotatex(-90deg);
+    			.chess-piece {
+    				background-position-x: calc(var(--s) * -5);
+    				grid-area: 4 / 4;
+    			}
+    			.target {
+    				grid-area: 4 / 4;
+    			}
+    		}
+    	}
+    }
+
+    .top {
+    	background-color: var(--dark);
+    	max-width: 100%;
+    	--s: 200px;
+    	h1 {
+    		text-align: center;
+    		color: var(--red);
+    		font-size: 3rem;
+    		font-weight: 600;
+    		grid-area: 1 / span 3;
+    	}
+    	.grid {
+    		display: grid;
+    		grid-template: 150px repeat(2, var(--s)) / repeat(3, var(--s));
+    	}
+    }
+
+    .piece {
+    	position: relative;
+    	cursor: pointer;
+    	overflow: hidden;
+    	border: 1px solid var(--purple);
+    	font-size: 2rem;
+    	background-image: url("https://assets.codepen.io/539557/chess-neon.svg");
+    	background-size: calc(6 * var(--s)) var(--s);
+    	background-repeat: no-repeat;
+    	transition: background 0.3s ease-in-out;
+    	&::after {
+    		content: attr(data-piece);
+    		text-transform: uppercase;
+    		position: absolute;
+    		color: var(--blue);
+    		text-align: center;
+    		font-weight: 800;
+    		width: 100%;
+    		transform: translate(0, -100%);
+    		transition: transform 0.3s ease-out;
+    	}
+    	&.pawn {
+    		background-position: 0 0;
+    	}
+    	&.knight {
+    		background-position: calc(var(--s) * -2) 0;
+    	}
+    	&.rook {
+    		background-position: calc(var(--s) * -1) 0;
+    	}
+    	&.bishop {
+    		background-position: calc(var(--s) * -3) 0;
+    	}
+    	&.queen {
+    		background-position: calc(var(--s) * -4) 0;
+    	}
+    	&.king {
+    		background-position: calc(var(--s) * -5) 0;
+    	}
+    	&:hover,
+    	&.selected {
+    		background-color: var(--purple);
+    		background-position-y: 20px;
+    		&::after {
+    			transform: translate(0, 10px);
+    		}
+    	}
+    }
+
+    .top.side {
+    	--s: 80px;
+    	max-width: calc(var(--s) + 20px);
+    	.grid {
+    		grid-template: 50px repeat(6, var(--s)) / var(--s);
+    		gap: 10px;
+    	}
+    	.piece {
+    		font-size: 1rem;
+    		transition-duration: 0s;
+    	}
+    	h1 {
+    		grid-area: 1 / 1;
+    		font-size: 1.25rem;
+    	}
+    }
+
+    .target {
+    	position: relative;
+    	width: 100%;
+    	height: 100%;
+    	background: var(--purple);
+    	opacity: 0.35;
+    }
     </style>
   </head>
   <body>
-
+    <div class="bot" id="bot">
+      <div class="board" id="board">
+        <div class="scale">
+          <div class="cube" id="cube">
+            <div class="side pawn">
+              <div class="target pawn"></div>
+              <div class="chess-piece pawn"></div>
+            </div>
+            <div class="side knight">
+              <div class="target knight"></div>
+              <div class="chess-piece knight"></div>
+            </div>
+            <div class="side rook">
+              <div class="target rook"></div>
+              <div class="chess-piece rook"></div>
+            </div>
+            <div class="side bishop">
+              <div class="target bishop"></div>
+              <div class="chess-piece bishop"></div>
+            </div>
+            <div class="side queen">
+              <div class="target queen"></div>
+              <div class="chess-piece queen"></div>
+            </div>
+            <div class="side king">
+              <div class="target king"></div>
+              <div class="chess-piece king"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="top" id="top">
+      <div class="grid" id="grid">
+        <h1>Pieces</h1>
+        <div class="piece pawn" id="p-pawn" data-piece="pawn"></div>
+        <div class="piece knight" id="p-knight" data-piece="knight"></div>
+        <div class="piece rook" id="p-rook" data-piece="rook"></div>
+        <div class="piece bishop" id="p-bishop" data-piece="bishop"></div>
+        <div class="piece queen" id="p-queen" data-piece="queen"></div>
+        <div class="piece king" id="p-king" data-piece="king"></div>
+      </div>
+    </div>
   </body>
 </html>
